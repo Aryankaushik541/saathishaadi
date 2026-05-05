@@ -1,0 +1,220 @@
+.proposals-page {
+  padding: 32px 20px 60px;
+  max-width: 900px !important;
+}
+
+.proposals-header {
+  margin-bottom: 28px;
+}
+
+.proposals-header h1 {
+  font-size: 1.8rem;
+  color: var(--dark);
+  margin-bottom: 6px;
+}
+
+.proposals-header p {
+  color: var(--text-light);
+}
+
+.proposal-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.pstat {
+  background: white;
+  border-radius: 12px;
+  padding: 20px 24px;
+  text-align: center;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  flex: 1;
+  min-width: 100px;
+}
+
+.pstat-num {
+  display: block;
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--primary);
+  font-family: 'Playfair Display', serif;
+}
+
+.pstat-label {
+  font-size: 12px;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.proposal-tabs {
+  display: flex;
+  gap: 0;
+  background: white;
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+.ptab {
+  flex: 1;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-light);
+  transition: all 0.2s;
+}
+
+.ptab.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 2px 10px rgba(192,57,43,0.3);
+}
+
+.proposals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.proposal-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  transition: all 0.2s;
+}
+
+.proposal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.proposal-card.status-accepted {
+  border-left: 4px solid var(--success);
+}
+
+.proposal-card.status-rejected {
+  border-left: 4px solid var(--danger);
+  opacity: 0.75;
+}
+
+.proposal-card.status-pending {
+  border-left: 4px solid var(--gold);
+}
+
+.proposal-img {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 3px solid var(--border);
+}
+
+.proposal-info {
+  flex: 1;
+}
+
+.proposal-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 4px;
+}
+
+.proposal-meta {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.proposal-bio {
+  font-size: 13px;
+  color: var(--text-light);
+  line-height: 1.5;
+  margin-bottom: 6px;
+}
+
+.proposal-status {
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+}
+
+.proposal-status.status-pending { background: rgba(243,156,18,0.1); color: var(--gold); }
+.proposal-status.status-accepted { background: rgba(39,174,96,0.1); color: var(--success); }
+.proposal-status.status-rejected { background: rgba(231,76,60,0.1); color: var(--danger); }
+
+.proposal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.pa-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  border: none;
+  text-decoration: none;
+  text-align: center;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.pa-btn.accept { background: var(--success); color: white; }
+.pa-btn.accept:hover { opacity: 0.85; }
+.pa-btn.reject { background: rgba(231,76,60,0.1); color: var(--danger); border: 1px solid var(--danger); }
+.pa-btn.reject:hover { background: var(--danger); color: white; }
+.pa-btn.chat { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
+.pa-btn.view { background: var(--cream); color: var(--text); border: 1px solid var(--border); }
+
+.proposals-empty {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.proposals-empty h3 {
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  color: var(--dark);
+}
+
+.proposals-empty p {
+  color: var(--text-light);
+}
+
+@media (max-width: 600px) {
+  .proposal-card {
+    flex-direction: column;
+    text-align: center;
+  }
+  .proposal-actions {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}

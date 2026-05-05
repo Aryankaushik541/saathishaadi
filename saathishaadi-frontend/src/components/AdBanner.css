@@ -1,0 +1,193 @@
+.top-ad-banner {
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  overflow: hidden;
+  white-space: nowrap;
+  padding: 8px 0;
+  border-bottom: 2px solid var(--gold);
+}
+
+.ad-scroll-wrapper {
+  display: inline-flex;
+  animation: scrollAds 30s linear infinite;
+  gap: 24px;
+  padding: 0 24px;
+}
+
+@keyframes scrollAds {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.ad-scroll-wrapper:hover {
+  animation-play-state: paused;
+}
+
+.ad-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 5px 14px;
+  flex-shrink: 0;
+}
+
+.ad-chip-icon {
+  font-size: 16px;
+}
+
+.ad-chip-title {
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.ad-chip-sep {
+  color: rgba(255,255,255,0.3);
+}
+
+.ad-chip-sub {
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+}
+
+.ad-chip-cta {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  border-radius: 12px;
+  padding: 2px 10px;
+  cursor: pointer;
+}
+
+/* Sidebar Ads */
+.sidebar-ads {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 240px;
+  flex-shrink: 0;
+}
+
+.sidebar-ad-title {
+  color: var(--text-light);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.sidebar-ad-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border-top: 4px solid;
+}
+
+.sidebar-ad-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+}
+
+.sidebar-ad-icon {
+  font-size: 24px;
+}
+
+.sidebar-ad-name {
+  font-weight: 700;
+  font-size: 14px;
+  font-family: 'Playfair Display', serif;
+}
+
+.sidebar-ad-sub {
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.sidebar-ad-desc {
+  font-size: 12px;
+  color: var(--text-light);
+  padding: 0 12px 8px;
+  line-height: 1.5;
+}
+
+.sidebar-ad-phone {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dark);
+  padding: 0 12px 8px;
+}
+
+.sidebar-ad-btn {
+  display: block;
+  width: calc(100% - 24px);
+  margin: 0 12px 12px;
+  padding: 8px;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  transition: opacity 0.2s;
+}
+
+.sidebar-ad-btn:hover {
+  opacity: 0.85;
+}
+
+/* Inline Ad */
+.inline-ad {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  border: 1px solid;
+  margin: 20px 0;
+  position: relative;
+}
+
+.inline-ad-badge {
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.3);
+  letter-spacing: 1px;
+}
+
+.inline-ad-icon {
+  font-size: 28px;
+}
+
+.inline-ad-title {
+  font-weight: 700;
+  font-size: 15px;
+  font-family: 'Playfair Display', serif;
+}
+
+.inline-ad-sub {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-top: 2px;
+}
+
+.inline-ad-cta {
+  margin-left: auto;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  white-space: nowrap;
+}

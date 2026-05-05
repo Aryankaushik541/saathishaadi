@@ -1,0 +1,58 @@
+.filters-bar { padding: 16px 20px; }
+.filters-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.filters-row .input { flex: 1; min-width: 160px; }
+
+.table-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-avatar-placeholder {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--gold));
+  color: white; font-weight: 700; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.user-name { font-weight: 600; font-size: 14px; }
+
+.action-btns { display: flex; gap: 6px; align-items: center; }
+
+/* User Detail Modal */
+.user-detail-grid { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; padding: 16px; background: var(--cream); border-radius: 12px; }
+.user-detail-avatar {
+  width: 60px; height: 60px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--gold));
+  color: white; font-size: 24px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.user-detail-info h4 { font-size: 18px; color: var(--primary-dark); }
+.user-detail-info p { color: var(--text-muted); font-size: 14px; }
+
+.detail-list { display: flex; flex-direction: column; gap: 8px; }
+.detail-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-radius: 8px; background: #fafafa; border: 1px solid var(--border); }
+.detail-key { font-size: 13px; color: var(--text-muted); font-weight: 500; }
+.detail-val { font-size: 14px; font-weight: 600; color: var(--text); }
