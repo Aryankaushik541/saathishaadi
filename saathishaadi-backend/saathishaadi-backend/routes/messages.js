@@ -51,16 +51,17 @@ router.get('/:userId', protect, apiLimiter,
 
 // POST /api/messages — Send message
 router.post('/', protect, apiLimiter,
-  [
-    body('receiverId').isMongoId().withMessage('Valid receiver ID required'),
-    body('text').trim().notEmpty().isLength({ max: 1000 }).withMessage('Message 1-1000 characters ka hona chahiye'),
+    [
+      body('receiverId').isMongoId().withMessage('Valid receiver ID required'),
+    body('content').trim().notEmpty().isLength({ max: 5000 }).withMessage('Message 1-5000 characters ka hona chahiye'),
+    body('encrypted').optional().isBoolean().withMessage('Encrypted flag valid hona chahiye'),
   ],
   async (req, res) => {
     const validErr = handleValidation(req, res);
     if (validErr) return;
 
     try {
-      const { receiverId, text } = req.body;
+      const { receiverId, content, encrypted = false } = req.body;
 
       const connected = await checkConnection(req.user._id, receiverId);
       if (!connected) return res.status(403).json({ message: 'Pehle proposal accept karo' });
@@ -68,7 +69,8 @@ router.post('/', protect, apiLimiter,
       const message = await Message.create({
         sender: req.user._id,
         receiver: receiverId,
-        text,
+        content,
+        encrypted,
       });
 
       res.status(201).json(message);

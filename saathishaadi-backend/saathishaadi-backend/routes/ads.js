@@ -8,7 +8,7 @@ router.get('/', async (req, res) => {
     const { position } = req.query;
     const query = { isActive: true };
     if (position) query.position = position;
-    const ads = await Advertisement.find(query).limit(5);
+    const ads = await Advertisement.find(query).sort({ updatedAt: -1 }).limit(5).lean();
     res.json(ads);
   } catch (err) {
     res.status(500).json({ message: 'Error' });

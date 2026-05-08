@@ -8,10 +8,13 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 
+const path = require('path');
 const User = require('../models/User');
 const Proposal = require('../models/Proposal');
 const Message = require('../models/Message');
 const Advertisement = require('../models/Advertisement');
+const Page = require('../models/Page');
+const upload = require('../middleware/upload');
 const { protect, adminOnly } = require('../middleware/auth');
 const { adminLimiter } = require('../middleware/security');
 const { safeCompare } = require('../utils/crypto');
@@ -90,7 +93,8 @@ router.get('/dashboard', async (req, res) => {
     const [
       totalUsers, activeUsers, totalProposals, acceptedProposals,
       totalMessages, blockedUsers, newUsersThisWeek, maleCnt, femaleCnt,
-      pendingProposals, rejectedProposals,
+      pendingProposals, rejectedProposals, e2eeUsers,
+      totalPages,
     ] = await Promise.all([
       User.countDocuments({ isAdmin: false }),
       User.countDocuments({ isAdmin: false, isBlocked: false }),
@@ -103,6 +107,8 @@ router.get('/dashboard', async (req, res) => {
       User.countDocuments({ gender: 'Female', isAdmin: false }),
       Proposal.countDocuments({ status: 'pending' }),
       Proposal.countDocuments({ status: 'rejected' }),
+      User.countDocuments({ isAdmin: false, e2eePublicKey: { $ne: null } }),
+      Page.countDocuments(),
     ]);
 
     const [religionStats, districtStats] = await Promise.all([
@@ -123,11 +129,87 @@ router.get('/dashboard', async (req, res) => {
       totalUsers, activeUsers, totalProposals, acceptedProposals,
       totalMessages, blockedUsers, newUsersThisWeek,
       maleCnt, femaleCnt, religionStats, districtStats,
-      pendingProposals, rejectedProposals,
+      pendingProposals, rejectedProposals, e2eeUsers, totalPages,
     });
   } catch (err) {
     logger.error('Dashboard error', { error: err.message });
     res.status(500).json({ message: 'Dashboard load error' });
+  }
+});
+
+// ─── Pages Management ────────────────────────────────────────────────────────
+
+router.get('/pages', async (req, res) => {
+  try {
+    const pages = await Page.find().sort({ updatedAt: -1 }).lean();
+    res.json(pages);
+  } catch (err) {
+    res.status(500).json({ message: 'Pages load error' });
+  }
+});
+
+router.post('/pages',
+  [
+    body('slug').trim().isSlug().withMessage('Slug valid hona chahiye'),
+    body('title').trim().notEmpty().isLength({ max: 120 }).withMessage('Title required hai'),
+    body('subtitle').optional().trim().isLength({ max: 200 }).withMessage('Subtitle max 200 chars'),
+    body('content').trim().notEmpty().isLength({ max: 5000 }).withMessage('Content required hai'),
+  ],
+  async (req, res) => {
+    const validErr = handleValidation(req, res);
+    if (validErr) return;
+
+    try {
+      const page = await Page.create({
+        slug: req.body.slug,
+        title: req.body.title,
+        subtitle: req.body.subtitle || '',
+        content: req.body.content,
+        isActive: req.body.isActive !== false,
+      });
+      res.status(201).json(page);
+    } catch (err) {
+      if (err.code === 11000) return res.status(409).json({ message: 'Slug already exist karta hai' });
+      res.status(500).json({ message: 'Page create error' });
+    }
+  }
+);
+
+router.put('/pages/:id',
+  [
+    body('slug').optional().trim().isSlug().withMessage('Slug valid hona chahiye'),
+    body('title').optional().trim().notEmpty().isLength({ max: 120 }).withMessage('Title valid hona chahiye'),
+    body('subtitle').optional().trim().isLength({ max: 200 }).withMessage('Subtitle max 200 chars'),
+    body('content').optional().trim().notEmpty().isLength({ max: 5000 }).withMessage('Content valid hona chahiye'),
+  ],
+  async (req, res) => {
+    const validErr = handleValidation(req, res);
+    if (validErr) return;
+
+    try {
+      const allowed = ['slug', 'title', 'subtitle', 'content', 'isActive'];
+      const update = {};
+      allowed.forEach(key => {
+        if (req.body[key] !== undefined) update[key] = req.body[key];
+      });
+
+      const page = await Page.findByIdAndUpdate(req.params.id, update, { new: true, runValidators: true });
+      if (!page) return res.status(404).json({ message: 'Page nahi mila' });
+      res.json(page);
+    } catch (err) {
+      if (err.code === 11000) return res.status(409).json({ message: 'Slug already exist karta hai' });
+      res.status(500).json({ message: 'Page update error' });
+    }
+  }
+);
+
+router.delete('/pages/:id', async (req, res) => {
+  try {
+    const page = await Page.findByIdAndDelete(req.params.id);
+    if (!page) return res.status(404).json({ message: 'Page nahi mila' });
+    res.json({ message: 'Page delete ho gaya' });
+  } catch (err) {
+    res.status(500).json({ message: 'Page delete error' });
   }
 });
 
@@ -170,6 +252,7 @@ router.get('/users', async (req, res) => {
 router.put('/users/:id',
   [
     body('name').optional().trim().notEmpty().isLength({ max: 100 }).withMessage('Name valid hona chahiye'),
+    body('mobile').optional().trim().matches(/^$|^[6-9]\d{9}$/).withMessage('Valid 10 digit mobile number daalen'),
     body('age').optional().isInt({ min: 18, max: 65 }).withMessage('Age 18-65 ke beech honi chahiye'),
     body('gender').optional().isIn(['Male', 'Female']).withMessage('Gender Male ya Female hona chahiye'),
     body('religion').optional().trim().notEmpty().withMessage('Religion valid hona chahiye'),
@@ -180,7 +263,7 @@ router.put('/users/:id',
     if (validErr) return;
 
     try {
-      const allowedFields = ['name', 'age', 'gender', 'religion', 'caste', 'district', 'profession', 'bio'];
+      const allowedFields = ['name', 'mobile', 'age', 'gender', 'religion', 'caste', 'district', 'profession', 'bio'];
       const updateData = {};
       allowedFields.forEach(field => {
         if (req.body[field] !== undefined) updateData[field] = req.body[field];
@@ -389,6 +472,22 @@ router.get('/ads', async (req, res) => {
     res.status(500).json({ message: 'Ads load error' });
   }
 });
+
+// ─── Ad Image Upload ──────────────────────────────────────────────────────────
+// POST /api/admin/ads/upload-image  (multipart/form-data, field: "image")
+router.post('/ads/upload-image',
+  protect, adminOnly,
+  upload.single('image'),
+  upload.handleUploadError,
+  (req, res) => {
+    if (!req.file) return res.status(400).json({ message: 'Koi image nahi mili' });
+    // Build public URL: http(s)://domain/uploads/filename
+    const protocol = req.protocol;
+    const host = req.get('host');
+    const imageUrl = `${protocol}://${host}/uploads/${req.file.filename}`;
+    res.json({ imageUrl, filename: req.file.filename });
+  }
+);
 
 router.post('/ads',
   [

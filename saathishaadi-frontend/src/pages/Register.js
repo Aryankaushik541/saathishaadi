@@ -13,7 +13,7 @@ const Register = () => {
   const [photoPreview, setPhotoPreview] = useState('');
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
-    name: '', age: '', gender: '', religion: '', caste: '',
+    name: '', mobile: '', age: '', gender: '', religion: '', caste: '',
     district: '', profession: '', bio: ''
   });
   const { sendOtp, register } = useAuth();
@@ -171,6 +171,14 @@ const Register = () => {
                 <input value={form.name} onChange={e => setForm({...form, name: e.target.value})}
                   placeholder="Apna naam likhein" style={styles.input} required />
               </div>
+              <div style={styles.field}>
+                <label style={styles.label}>Mobile Number</label>
+                <input value={form.mobile} onChange={e => setForm({...form, mobile: e.target.value.replace(/\D/g, '').slice(0, 10)})}
+                  placeholder="10 digit mobile" style={styles.input} inputMode="numeric" />
+              </div>
+            </div>
+
+            <div style={styles.grid2}>
               <div style={styles.field}>
                 <label style={styles.label}>Aayu (Age) *</label>
                 <input type="number" min={18} max={65} value={form.age}

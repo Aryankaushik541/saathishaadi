@@ -19,7 +19,7 @@ const Login = () => {
     }
     setLoading(true);
     try {
-      const res = await sendOtp(email);
+      await sendOtp(email);
       setOtpSent(true);
       toast.success('OTP aapke email par bheja gaya! ✉️');
     } catch (err) {

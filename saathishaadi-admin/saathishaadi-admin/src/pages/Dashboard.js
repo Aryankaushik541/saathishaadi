@@ -75,6 +75,8 @@ export default function Dashboard() {
           <StatCard icon="💬" label="Total Messages" value={data?.totalMessages} color="#8e44ad" />
           <StatCard icon="👨" label="Male Users" value={data?.maleCnt} color="#3498db" />
           <StatCard icon="👩" label="Female Users" value={data?.femaleCnt} color="#e91e8c" />
+          <StatCard icon="🔒" label="E2EE Users" value={data?.e2eeUsers} color="#2c3e50" />
+          <StatCard icon="📄" label="Pages" value={data?.totalPages} color="#2c3e50" />
         </div>
 
         {/* Charts Row 1 */}

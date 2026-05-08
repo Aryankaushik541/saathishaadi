@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../utils/api';
+import { ensureE2EEKeys } from '../utils/e2ee';
 
 const AuthContext = createContext();
 
@@ -14,6 +15,7 @@ export const AuthProvider = ({ children }) => {
     if (stored && storedToken) {
       setUser(JSON.parse(stored));
       setToken(storedToken);
+      ensureE2EEKeys(api).catch(() => {});
     }
     setLoading(false);
   }, []);
@@ -31,6 +33,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(res.data.user));
     setToken(res.data.token);
     setUser(res.data.user);
+    ensureE2EEKeys(api).catch(() => {});
     return res.data;
   };
 
@@ -43,6 +46,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(res.data.user));
     setToken(res.data.token);
     setUser(res.data.user);
+    ensureE2EEKeys(api).catch(() => {});
     return res.data;
   };
 

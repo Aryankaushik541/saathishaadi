@@ -63,9 +63,9 @@ export default function AdminLogin() {
         </form>
 
         <div className="login-hint">
-          <p>Default: <strong>admin</strong> / <strong>saathishaadi@admin2025</strong></p>
-          <p style={{ fontSize: 12, marginTop: 4, color: 'var(--text-muted)' }}>
-            Backend .env se change kar sakte hain
+          <p>
+            Login details backend <strong>.env</strong> ke <strong>ADMIN_USERNAME</strong> aur{' '}
+            <strong>ADMIN_PASSWORD</strong> se aate hain.
           </p>
         </div>
       </div>

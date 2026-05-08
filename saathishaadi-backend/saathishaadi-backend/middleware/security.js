@@ -14,11 +14,17 @@ const logger = require('../utils/logger');
 const blacklistedIPs = new Set();
 const suspiciousIPs = new Map(); // ip -> { count, firstSeen }
 
+const getClientIp = (req) =>
+  req.headers['cf-connecting-ip'] ||
+  req.headers['x-real-ip'] ||
+  req.ip ||
+  req.connection.remoteAddress;
+
 /**
  * IP Blacklist Middleware - Blacklisted IPs ko block karo
  */
 const ipBlacklist = (req, res, next) => {
-  const ip = req.ip || req.connection.remoteAddress;
+  const ip = getClientIp(req);
   if (blacklistedIPs.has(ip)) {
     logger.warn(`Blacklisted IP blocked: ${ip}`);
     return res.status(403).json({ message: 'Access denied.' });
@@ -31,7 +37,7 @@ const ipBlacklist = (req, res, next) => {
  * Bahut zyada requests wale IPs ko auto-blacklist karo
  */
 const ddosProtection = (req, res, next) => {
-  const ip = req.ip || req.connection.remoteAddress;
+  const ip = getClientIp(req);
   const now = Date.now();
   const windowMs = 60 * 1000; // 1 minute window
   const maxRequests = 200; // max requests per minute per IP
@@ -154,6 +160,26 @@ const securityHeaders = (req, res, next) => {
 };
 
 /**
+ * Cloudflare-aware security middleware.
+ * CLOUDFLARE_ONLY=true in production blocks direct origin requests unless
+ * Cloudflare forwards CF-Connecting-IP.
+ */
+const cloudflareSecurity = (req, res, next) => {
+  if (req.headers['cf-connecting-ip']) {
+    req.realIp = req.headers['cf-connecting-ip'];
+  }
+
+  res.setHeader('CF-Cache-Status-Control', 'no-store');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+
+  if (process.env.CLOUDFLARE_ONLY === 'true' && !req.headers['cf-connecting-ip']) {
+    return res.status(403).json({ message: 'Direct origin access denied.' });
+  }
+
+  next();
+};
+
+/**
  * Log suspicious requests
  */
 const suspiciousRequestLogger = (req, res, next) => {
@@ -182,6 +208,8 @@ module.exports = {
   adminLimiter,
   requestSizeLimiter,
   securityHeaders,
+  cloudflareSecurity,
   suspiciousRequestLogger,
   blacklistedIPs,
+  getClientIp,
 };

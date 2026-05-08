@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ProfileCard from '../components/ProfileCard';
 import { InlineAd, TopAdBanner } from '../components/AdBanner';
 import { RELIGIONS, BIHAR_DISTRICTS } from '../utils/constants';
@@ -18,10 +18,7 @@ const Browse = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  useEffect(() => { fetchProfiles(); }, [filters, page]);
-  useEffect(() => { fetchSentProposals(); }, []);
-
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({ page, limit: 12, ...filters });
@@ -31,14 +28,17 @@ const Browse = () => {
       setTotalPages(res.data.totalPages || 1);
     } catch { toast.error('Profiles load karne mein error'); }
     setLoading(false);
-  };
+  }, [filters, page]);
 
-  const fetchSentProposals = async () => {
+  const fetchSentProposals = useCallback(async () => {
     try {
       const res = await api.get('/proposals/sent');
       setSentProposals(res.data.map(p => p.receiver._id || p.receiver));
     } catch {}
-  };
+  }, []);
+
+  useEffect(() => { fetchProfiles(); }, [fetchProfiles]);
+  useEffect(() => { fetchSentProposals(); }, [fetchSentProposals]);
 
   const handlePropose = async (receiverId) => {
     try {

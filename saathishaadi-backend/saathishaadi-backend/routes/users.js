@@ -109,7 +109,7 @@ router.get('/:id',
       const isSelf = req.params.id === req.user._id.toString();
 
       if (!isSelf) {
-        // Check if proposal accepted (to show email)
+        // Check if proposal accepted (to show contact details)
         const accepted = await Proposal.findOne({
           status: 'accepted',
           $or: [
@@ -119,8 +119,9 @@ router.get('/:id',
         }).lean();
 
         if (!accepted) {
-          // Hide email for unconnected users
+          // Hide contact details for unconnected users
           user.email = '***@***.***';
+          user.mobile = '**********';
         }
       }
 
@@ -139,6 +140,7 @@ router.put('/profile',
   handleUploadError,
   [
     body('name').optional().trim().isLength({ min: 2, max: 100 }).withMessage('Naam 2-100 char ka hona chahiye'),
+    body('mobile').optional().trim().matches(/^$|^[6-9]\d{9}$/).withMessage('Valid 10 digit mobile number daalen'),
     body('age').optional().isInt({ min: 18, max: 65 }).withMessage('Umar 18-65 ke beech honi chahiye'),
     body('bio').optional().isLength({ max: 500 }).withMessage('Bio 500 characters se zyada nahi'),
   ],
@@ -147,7 +149,7 @@ router.put('/profile',
     if (validErr) return;
 
     try {
-      const allowed = ['name', 'age', 'religion', 'caste', 'district', 'profession', 'bio'];
+      const allowed = ['name', 'mobile', 'age', 'religion', 'caste', 'district', 'profession', 'bio'];
       const updates = {};
 
       for (const field of allowed) {
@@ -169,6 +171,32 @@ router.put('/profile',
     } catch (err) {
       logger.error('Update profile error', { error: err.message });
       res.status(500).json({ message: 'Profile update karne mein error' });
+    }
+  }
+);
+
+// PUT /api/users/e2ee-key — Save browser public key for end-to-end encrypted chat
+router.put('/e2ee-key',
+  protect,
+  apiLimiter,
+  [
+    body('e2eePublicKey').isObject().withMessage('Public key required hai'),
+  ],
+  async (req, res) => {
+    const validErr = handleValidation(req, res);
+    if (validErr) return;
+
+    try {
+      const key = req.body.e2eePublicKey;
+      if (key.kty !== 'EC' || key.crv !== 'P-256' || !key.x || !key.y) {
+        return res.status(400).json({ message: 'Invalid public key' });
+      }
+
+      await User.findByIdAndUpdate(req.user._id, { e2eePublicKey: key });
+      res.json({ message: 'Encryption key save ho gayi' });
+    } catch (err) {
+      logger.error('E2EE key update error', { error: err.message });
+      res.status(500).json({ message: 'Encryption key save nahi hui' });
     }
   }
 );

@@ -11,6 +11,7 @@ import Profile from './pages/Profile';
 import Proposals from './pages/Proposals';
 import Chat from './pages/Chat';
 import VideoCall from './pages/VideoCall';
+import ContentPage from './pages/ContentPage';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -34,6 +35,7 @@ const AppRoutes = () => {
         <Route path="/chats" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
         <Route path="/chat/:userId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
         <Route path="/call/:userId" element={<ProtectedRoute><VideoCall /></ProtectedRoute>} />
+        <Route path="/pages/:slug" element={<ContentPage />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </>

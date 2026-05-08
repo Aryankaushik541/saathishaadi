@@ -180,6 +180,7 @@ router.post('/register',
     body('email').isEmail().withMessage('Valid email required').normalizeEmail(),
     body('otp').isLength({ min: 6, max: 6 }).isNumeric().withMessage('Valid OTP required'),
     body('name').trim().isLength({ min: 2, max: 100 }).withMessage('Naam 2-100 characters ka hona chahiye'),
+    body('mobile').optional().trim().matches(/^$|^[6-9]\d{9}$/).withMessage('Valid 10 digit mobile number daalen'),
     body('age').isInt({ min: 18, max: 65 }).withMessage('Umar 18-65 ke beech honi chahiye'),
     body('gender').isIn(['Male', 'Female']).withMessage('Gender Male ya Female hona chahiye'),
     body('religion').trim().notEmpty().withMessage('Dharm required hai'),
@@ -189,7 +190,7 @@ router.post('/register',
     if (validErr) return;
 
     try {
-      const { email, otp, name, age, gender, religion, caste, district, profession, bio } = req.body;
+      const { email, otp, name, mobile, age, gender, religion, caste, district, profession, bio } = req.body;
 
       // Verify OTP for registration
       const otpRecord = await OTP.findOne({ email, used: false }).sort({ createdAt: -1 });
@@ -220,7 +221,7 @@ router.post('/register',
       const existing = await User.findOne({ email });
       if (existing) {
         // Update existing
-        const updates = { name, age: Number(age), gender, religion };
+        const updates = { name, mobile: mobile || '', age: Number(age), gender, religion };
         if (caste !== undefined) updates.caste = caste;
         if (district !== undefined) updates.district = district;
         if (profession !== undefined) updates.profession = profession;
@@ -242,6 +243,7 @@ router.post('/register',
       const userData = {
         email,
         name,
+        mobile: mobile || '',
         age: Number(age),
         gender,
         religion,

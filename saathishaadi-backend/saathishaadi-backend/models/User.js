@@ -16,6 +16,12 @@ const userSchema = new mongoose.Schema({
     trim: true,
     match: [/^\S+@\S+\.\S+$/, 'Valid email address daalen'],
   },
+  mobile: {
+    type: String,
+    default: '',
+    trim: true,
+    match: [/^$|^[6-9]\d{9}$/, 'Valid 10 digit mobile number daalen'],
+  },
   name: {
     type: String,
     required: true,
@@ -61,6 +67,10 @@ const userSchema = new mongoose.Schema({
   photo: {
     type: String,
     default: '',
+  },
+  e2eePublicKey: {
+    type: Object,
+    default: null,
   },
   isActive: {
     type: Boolean,

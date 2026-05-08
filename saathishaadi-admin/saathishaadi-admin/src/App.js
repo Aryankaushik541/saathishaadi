@@ -9,6 +9,7 @@ import Users from './pages/Users';
 import Proposals from './pages/Proposals';
 import Messages from './pages/Messages';
 import Ads from './pages/Ads';
+import Pages from './pages/Pages';
 
 const ProtectedRoute = ({ children }) => {
   const { token, loading } = useAdminAuth();
@@ -30,6 +31,7 @@ const AdminRoutes = () => {
       <Route path="/proposals" element={<ProtectedRoute><Layout><Proposals /></Layout></ProtectedRoute>} />
       <Route path="/messages" element={<ProtectedRoute><Layout><Messages /></Layout></ProtectedRoute>} />
       <Route path="/ads" element={<ProtectedRoute><Layout><Ads /></Layout></ProtectedRoute>} />
+      <Route path="/pages" element={<ProtectedRoute><Layout><Pages /></Layout></ProtectedRoute>} />
       <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} />} />
     </Routes>
   );

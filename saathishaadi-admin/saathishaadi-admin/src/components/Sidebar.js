@@ -10,6 +10,7 @@ const navItems = [
   { to: '/proposals', icon: '💌', label: 'Proposals' },
   { to: '/messages', icon: '💬', label: 'Messages' },
   { to: '/ads', icon: '📢', label: 'Advertisements' },
+  { to: '/pages', icon: '📄', label: 'Pages' },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {

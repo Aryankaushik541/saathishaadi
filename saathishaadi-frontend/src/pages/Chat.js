@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import api from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
+import { decryptMessage, encryptMessage, ensureE2EEKeys } from '../utils/e2ee';
 
 let socket;
 
@@ -20,65 +21,87 @@ const Chat = () => {
   const messagesEndRef = useRef(null);
   const typingTimeout = useRef(null);
 
+  const fetchConversations = useCallback(async () => {
+    try {
+      const res = await api.get('/messages/conversations');
+      setConversations(res.data);
+    } catch {}
+  }, []);
+
+  const decryptMessages = useCallback(async (items, contact) => {
+    return Promise.all(items.map(async (msg) => ({
+      ...msg,
+      displayContent: msg.encrypted
+        ? await decryptMessage(msg.content, contact?.e2eePublicKey)
+        : msg.content,
+    })));
+  }, []);
+
+  const fetchMessages = useCallback(async (contact) => {
+    try {
+      const res = await api.get(`/messages/${userId}`);
+      setMessages(await decryptMessages(res.data, contact));
+      socket.emit('join_chat', { userId, otherUserId: userId });
+    } catch { toast.error('Messages load nahi ho sake'); }
+  }, [decryptMessages, userId]);
+
+  const fetchOtherUser = useCallback(async () => {
+    try {
+      const res = await api.get(`/users/${userId}`);
+      setOtherUser(res.data);
+      return res.data;
+    } catch {}
+  }, [userId]);
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
     socket = io(SOCKET_URL, { auth: { token } });
 
     socket.on('connect', () => {});
-    socket.on('receive_message', (msg) => {
-      setMessages(prev => [...prev, msg]);
+    socket.on('receive_message', async (msg) => {
+      const displayContent = msg.encrypted
+        ? await decryptMessage(msg.content, otherUser?.e2eePublicKey)
+        : msg.content;
+      setMessages(prev => [...prev, { ...msg, displayContent }]);
     });
     socket.on('user_online', (uid) => { if (uid === userId) setOnline(true); });
     socket.on('user_offline', (uid) => { if (uid === userId) setOnline(false); });
     socket.on('typing', (uid) => { if (uid === userId) { setTyping(true); setTimeout(() => setTyping(false), 2000); } });
 
     fetchConversations();
+    ensureE2EEKeys(api).catch(() => {});
     return () => { socket.disconnect(); };
-  }, []);
+  }, [fetchConversations, otherUser, userId]);
 
   useEffect(() => {
-    if (userId) { fetchMessages(); fetchOtherUser(); }
-  }, [userId]);
+    if (userId) {
+      fetchOtherUser().then(contact => fetchMessages(contact));
+    }
+  }, [userId, fetchMessages, fetchOtherUser]);
 
   useEffect(() => { scrollToBottom(); }, [messages]);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 
-  const fetchConversations = async () => {
-    try {
-      const res = await api.get('/messages/conversations');
-      setConversations(res.data);
-    } catch {}
-  };
-
-  const fetchMessages = async () => {
-    try {
-      const res = await api.get(`/messages/${userId}`);
-      setMessages(res.data);
-      socket.emit('join_chat', { userId, otherUserId: userId });
-    } catch { toast.error('Messages load nahi ho sake'); }
-  };
-
-  const fetchOtherUser = async () => {
-    try {
-      const res = await api.get(`/users/${userId}`);
-      setOtherUser(res.data);
-    } catch {}
-  };
-
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!newMsg.trim()) return;
     try {
-      const res = await api.post('/messages', { receiverId: userId, content: newMsg });
+      if (!otherUser?.e2eePublicKey) {
+        return toast.error('Is user ke liye encryption key ready nahi hai');
+      }
+      const encryptedContent = await encryptMessage(newMsg, otherUser.e2eePublicKey);
+      const res = await api.post('/messages', { receiverId: userId, content: encryptedContent, encrypted: true });
+      const message = { ...res.data, displayContent: newMsg };
       socket.emit('send_message', { receiverId: userId, message: res.data });
-      setMessages(prev => [...prev, res.data]);
+      setMessages(prev => [...prev, message]);
       setNewMsg('');
     } catch { toast.error('Message send nahi hua'); }
   };
 
   const handleTyping = () => {
+    if (!socket) return;
     socket.emit('typing', { receiverId: userId });
     clearTimeout(typingTimeout.current);
     typingTimeout.current = setTimeout(() => {}, 1000);
@@ -150,7 +173,7 @@ const Chat = () => {
               return (
                 <div key={i} style={{ ...styles.msgWrap, justifyContent: isMine ? 'flex-end' : 'flex-start' }}>
                   <div style={{ ...styles.bubble, ...(isMine ? styles.myBubble : styles.theirBubble) }}>
-                    {msg.content}
+                    {msg.displayContent || msg.content}
                     <div style={styles.msgTime}>
                       {new Date(msg.createdAt).toLocaleTimeString('hi-IN', { hour: '2-digit', minute: '2-digit' })}
                       {isMine && <span style={{ marginLeft: 4 }}>✓✓</span>}

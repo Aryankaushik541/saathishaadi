@@ -258,17 +258,17 @@ const HomePage = () => {
             </div>
             <div className="footer-links">
               <h5>Help</h5>
-              <a href="#">Privacy Policy</a>
-              <a href="#">Terms of Use</a>
-              <a href="#">Contact Us</a>
-              <a href="#">About Us</a>
+              <Link to="/pages/privacy-policy">Privacy Policy</Link>
+              <Link to="/pages/terms">Terms of Use</Link>
+              <Link to="/pages/contact">Contact Us</Link>
+              <Link to="/pages/about">About Us</Link>
             </div>
             <div className="footer-links">
               <h5>Religions</h5>
-              <a href="#">Hindu Vivah</a>
-              <a href="#">Muslim Nikah</a>
-              <a href="#">Christian Match</a>
-              <a href="#">All Religions</a>
+              <Link to="/pages/hindu-vivah">Hindu Vivah</Link>
+              <Link to="/pages/muslim-nikah">Muslim Nikah</Link>
+              <Link to="/pages/christian-match">Christian Match</Link>
+              <Link to="/pages/all-religions">All Religions</Link>
             </div>
           </div>
           <div className="footer-bottom">

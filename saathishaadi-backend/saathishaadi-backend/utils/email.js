@@ -4,6 +4,8 @@
  */
 
 const nodemailer = require('nodemailer');
+const fs = require('fs');
+const path = require('path');
 const logger = require('./logger');
 
 let transporter = null;
@@ -27,49 +29,79 @@ const getTransporter = () => {
   return transporter;
 };
 
+const escapeHtml = (value = '') => String(value)
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#039;');
+
 /**
  * Email OTP send karo
  */
 const sendOTPEmail = async (email, otp, name = 'User') => {
   const mailer = getTransporter();
+  const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const logoPath = process.env.EMAIL_LOGO_PATH
+    ? path.resolve(process.cwd(), process.env.EMAIL_LOGO_PATH)
+    : path.resolve(__dirname, '../../saathishaadi-frontend/src/assest/logo.png');
+  const hasLocalLogo = fs.existsSync(logoPath);
+  const logoSrc = hasLocalLogo ? 'cid:saathishaadi-logo' : (process.env.EMAIL_LOGO_URL || `${frontendUrl}/logo.png`);
+  const safeName = escapeHtml(name);
   
   const htmlContent = `
   <!DOCTYPE html>
   <html>
   <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-      body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 0; }
-      .container { max-width: 500px; margin: 30px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-      .header { background: linear-gradient(135deg, #e44d7b, #c23b6e); color: white; padding: 30px; text-align: center; }
-      .header h1 { margin: 0; font-size: 24px; }
-      .header p { margin: 5px 0 0; opacity: 0.9; }
-      .body { padding: 30px; text-align: center; }
-      .otp-box { background: #fff5f8; border: 2px dashed #e44d7b; border-radius: 10px; padding: 20px; margin: 20px 0; }
-      .otp { font-size: 42px; font-weight: bold; color: #c23b6e; letter-spacing: 10px; }
-      .note { color: #888; font-size: 13px; margin-top: 15px; }
-      .footer { background: #f9f9f9; text-align: center; padding: 15px; color: #aaa; font-size: 12px; border-top: 1px solid #eee; }
-      .warning { color: #e44d7b; font-size: 13px; margin-top: 15px; }
+      body { font-family: Arial, sans-serif; background: #f5ece0; margin: 0; padding: 0; color: #2c1810; }
+      .wrapper { padding: 28px 12px; }
+      .container { max-width: 520px; margin: 0 auto; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 8px 28px rgba(44,24,16,0.14); border: 1px solid #ead9c9; }
+      .header { background: linear-gradient(135deg, #1a0a0a, #2d1010); color: white; padding: 28px 24px; text-align: center; }
+      .logo { width: 74px; height: 74px; object-fit: contain; display: block; margin: 0 auto 10px; background: #fff; border-radius: 50%; padding: 7px; }
+      .header h1 { margin: 0; font-size: 25px; letter-spacing: 0.2px; }
+      .header p { margin: 6px 0 0; color: #d4a017; font-size: 14px; }
+      .body { padding: 30px 28px; text-align: center; }
+      .greeting { color:#2c1810; font-size:17px; margin: 0 0 10px; }
+      .intro { color:#6d5148; font-size:14px; line-height:1.7; margin:0; }
+      .otp-box { background: #fff8f0; border: 2px dashed #c0392b; border-radius: 12px; padding: 20px 16px; margin: 22px 0 18px; }
+      .otp-label { color: #7a5c52; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+      .otp { font-size: 42px; font-weight: bold; color: #c0392b; letter-spacing: 9px; line-height: 1; }
+      .note { color: #7a5c52; font-size: 13px; margin: 14px 0 0; line-height: 1.6; }
+      .warning { background:#fff0ec; color: #96281b; font-size: 13px; margin-top: 16px; padding: 12px 14px; border-radius: 10px; line-height: 1.6; }
+      .footer { background: #fbf4eb; text-align: center; padding: 17px 18px; color: #8a756c; font-size: 12px; border-top: 1px solid #ead9c9; line-height: 1.6; }
+      .footer strong { color: #2c1810; }
+      @media only screen and (max-width: 520px) {
+        .body { padding: 24px 18px; }
+        .otp { font-size: 34px; letter-spacing: 6px; }
+      }
     </style>
   </head>
   <body>
-    <div class="container">
-      <div class="header">
-        <h1>🕉️ SaathiShaadi</h1>
-        <p>Aapka Saathi, Aapka Jeevan</p>
-      </div>
-      <div class="body">
-        <p style="color:#444; font-size:16px;">Namaste <strong>${name}</strong>! 🙏</p>
-        <p style="color:#555;">Aapka Email OTP neeche hai:</p>
-        <div class="otp-box">
-          <div class="otp">${otp}</div>
+    <div class="wrapper">
+      <div class="container">
+        <div class="header">
+          <img class="logo" src="${logoSrc}" alt="SaathiShaadi Logo" />
+          <h1>SaathiShaadi</h1>
+          <p>Bihar ka Apna Vivah Portal</p>
         </div>
-        <p class="note">⏱️ Yeh OTP sirf <strong>10 minutes</strong> ke liye valid hai.</p>
-        <p class="warning">⚠️ Yeh OTP kisi ke saath share mat karein. SaathiShaadi kabhi OTP nahi maangta.</p>
-      </div>
-      <div class="footer">
-        &copy; ${new Date().getFullYear()} SaathiShaadi. All rights reserved.<br>
-        Agar aapne yeh request nahi ki, please ignore karein.
+        <div class="body">
+          <p class="greeting">Namaste <strong>${safeName}</strong>,</p>
+          <p class="intro">Aapke SaathiShaadi account ke liye email verification OTP neeche diya gaya hai.</p>
+          <div class="otp-box">
+            <div class="otp-label">Your OTP Code</div>
+            <div class="otp">${otp}</div>
+          </div>
+          <p class="note">Yeh OTP sirf <strong>10 minutes</strong> ke liye valid hai.</p>
+          <div class="warning">Security note: Yeh OTP kisi ke saath share mat karein. SaathiShaadi team kabhi OTP nahi maangti.</div>
+        </div>
+        <div class="footer">
+          <strong>SaathiShaadi</strong><br>
+          &copy; ${new Date().getFullYear()} SaathiShaadi. All rights reserved.<br>
+          Agar aapne yeh request nahi ki, to is email ko ignore karein.
+        </div>
       </div>
     </div>
   </body>
@@ -79,8 +111,13 @@ const sendOTPEmail = async (email, otp, name = 'User') => {
     from: process.env.EMAIL_FROM || 'SaathiShaadi <noreply@saathishaadi.com>',
     to: email,
     subject: `${otp} - Aapka SaathiShaadi OTP`,
-    text: `Namaste ${name}!\n\nAapka SaathiShaadi OTP hai: ${otp}\n\nYeh OTP 10 minutes me expire ho jayega.\n\nKisi ke saath share mat karein.\n\n- SaathiShaadi Team`,
+    text: `Namaste ${name}!\n\nAapka SaathiShaadi OTP hai: ${otp}\n\nYeh OTP 10 minutes me expire ho jayega.\n\nKisi ke saath share mat karein. SaathiShaadi team kabhi OTP nahi maangti.\n\n- SaathiShaadi Team`,
     html: htmlContent,
+    attachments: hasLocalLogo ? [{
+      filename: 'saathishaadi-logo.png',
+      path: logoPath,
+      cid: 'saathishaadi-logo',
+    }] : [],
   };
 
   try {

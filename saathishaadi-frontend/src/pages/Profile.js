@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { RELIGIONS, HINDU_CASTES, MUSLIM_CASTES, BIHAR_DISTRICTS, PROFESSIONS } from '../utils/constants';
@@ -17,9 +17,7 @@ const Profile = () => {
   const [photoPreview, setPhotoPreview] = useState('');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { fetchProfile(); }, [id]);
-
-  const fetchProfile = async () => {
+  const fetchProfile = useCallback(async () => {
     try {
       const uid = id || user?._id;
       const res = await api.get(`/users/${uid}`);
@@ -27,7 +25,9 @@ const Profile = () => {
       setForm(res.data);
     } catch { toast.error('Profile load nahi hua'); }
     setLoading(false);
-  };
+  }, [id, user?._id]);
+
+  useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
@@ -36,8 +36,10 @@ const Profile = () => {
     if (photo) fd.append('photo', photo);
     try {
       const res = await api.put('/users/profile', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
-      setProfile(res.data);
-      updateUser(res.data);
+      const updated = res.data.user || res.data;
+      setProfile(updated);
+      setForm(updated);
+      updateUser(updated);
       setEditing(false);
       toast.success('Profile update ho gaya! ✅');
     } catch { toast.error('Update nahi hua'); }
@@ -110,6 +112,11 @@ const Profile = () => {
                   ['📍 Zila', profile.district || 'Bihar'],
                   ['💼 Peshaa', profile.profession || 'Bataya nahi'],
                   ['📧 Email', isOwn ? profile.email : '***@***.***'],
+                  ['📱 Mobile', profile.mobile || 'Bataya nahi'],
+                  ['✅ Email Verified', profile.isEmailVerified ? 'Haan' : 'Nahi'],
+                  ['🔒 Chat Encryption', profile.e2eePublicKey ? 'Enabled' : 'Pending'],
+                  ['🕒 Last Seen', profile.lastSeen ? new Date(profile.lastSeen).toLocaleDateString('hi-IN') : 'Bataya nahi'],
+                  ['📅 Joined', profile.createdAt ? new Date(profile.createdAt).toLocaleDateString('hi-IN') : 'Bataya nahi'],
                 ].map(([label, value]) => (
                   <div key={label} style={styles.infoItem}>
                     <span style={styles.infoLabel}>{label}</span>
@@ -127,6 +134,12 @@ const Profile = () => {
                 <label style={styles.label}>Naam</label>
                 <input value={form.name || ''} onChange={e => setForm({...form, name: e.target.value})} style={styles.input} />
               </div>
+              <div>
+                <label style={styles.label}>Mobile Number</label>
+                <input value={form.mobile || ''} onChange={e => setForm({...form, mobile: e.target.value.replace(/\D/g, '').slice(0, 10)})} style={styles.input} inputMode="numeric" />
+              </div>
+            </div>
+            <div style={styles.grid2}>
               <div>
                 <label style={styles.label}>Aayu</label>
                 <input type="number" min={18} max={60} value={form.age || ''} onChange={e => setForm({...form, age: e.target.value})} style={styles.input} />

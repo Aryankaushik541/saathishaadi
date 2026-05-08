@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import SimplePeer from 'simple-peer';
@@ -25,21 +25,18 @@ const VideoCall = () => {
   const [callDuration, setCallDuration] = useState(0);
   const durationTimer = useRef(null);
 
-  useEffect(() => {
-    fetchRemoteUser();
-    initSocket();
-    startCall();
-    return () => cleanup();
-  }, []);
-
-  const fetchRemoteUser = async () => {
+  const fetchRemoteUser = useCallback(async () => {
     try {
       const res = await api.get(`/users/${remoteUserId}`);
       setRemoteUser(res.data);
     } catch {}
-  };
+  }, [remoteUserId]);
 
-  const initSocket = () => {
+  const startDurationTimer = useCallback(() => {
+    durationTimer.current = setInterval(() => setCallDuration(d => d + 1), 1000);
+  }, []);
+
+  const initSocket = useCallback(() => {
     const token = localStorage.getItem('token');
     const SOCKET_URL = process.env.REACT_APP_API_URL?.replace('/api', '') || 'http://localhost:5000';
     socket = io(SOCKET_URL, { auth: { token } });
@@ -59,9 +56,9 @@ const VideoCall = () => {
       setCallState('ended');
       setTimeout(() => navigate(-1), 2000);
     });
-  };
+  }, [navigate, startDurationTimer]);
 
-  const startCall = async () => {
+  const startCall = useCallback(async () => {
     try {
       const constraints = { audio: true, video: callType === 'video' };
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -86,18 +83,21 @@ const VideoCall = () => {
       toast.error('Camera/Mic access nahi mila');
       setCallState('ended');
     }
-  };
+  }, [callType, remoteUserId, startDurationTimer]);
 
-  const startDurationTimer = () => {
-    durationTimer.current = setInterval(() => setCallDuration(d => d + 1), 1000);
-  };
-
-  const cleanup = () => {
+  const cleanup = useCallback(() => {
     streamRef.current?.getTracks().forEach(t => t.stop());
     peerRef.current?.destroy();
     socket?.disconnect();
     clearInterval(durationTimer.current);
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchRemoteUser();
+    initSocket();
+    startCall();
+    return () => cleanup();
+  }, [fetchRemoteUser, initSocket, startCall, cleanup]);
 
   const endCall = () => {
     socket.emit('end_call', { to: remoteUserId });

@@ -41,6 +41,7 @@ const {
   ddosProtection,
   globalLimiter,
   securityHeaders,
+  cloudflareSecurity,
   suspiciousRequestLogger,
 } = require('./middleware/security');
 
@@ -69,6 +70,7 @@ app.use(helmet({
 
 // 2. Custom security headers
 app.use(securityHeaders);
+app.use(cloudflareSecurity);
 
 // 3. DDoS detection (before rate limiter)
 app.use(ddosProtection);
@@ -142,6 +144,7 @@ app.use('/api/proposals', require('./routes/proposals'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/ads', require('./routes/ads'));
+app.use('/api/pages', require('./routes/pages'));
 
 // Health check (rate limited separately)
 app.get('/health', (req, res) => {
@@ -244,7 +247,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('call_user', ({ userToCall, signal, callType }) => {
-    if (!['video', 'audio'].includes(callType)) return;
+    if (!['video', 'voice', 'audio'].includes(callType)) return;
     const targetSocket = onlineUsers.get(userToCall);
     if (targetSocket) {
       io.to(targetSocket).emit('incoming_call', {
@@ -293,6 +296,17 @@ io.on('connection', (socket) => {
 });
 
 // ─── DATABASE + SERVER START ──────────────────────────────────────────────────
+const dropStaleIndexes = async () => {
+  try {
+    await mongoose.connection.db.collection('users').dropIndex('phone_1');
+    logger.info('Dropped stale users.phone_1 index');
+  } catch (err) {
+    if (!['IndexNotFound', 'NamespaceNotFound'].includes(err.codeName)) {
+      throw err;
+    }
+  }
+};
+
 const MONGO_URI = process.env.MONGO_URI;
 if (!MONGO_URI) {
   logger.error('MONGO_URI not set!');
@@ -308,8 +322,9 @@ mongoose.connect(MONGO_URI, {
   autoIndex: true,
   serverSelectionTimeoutMS: 5000,
 })
-  .then(() => {
+  .then(async () => {
     logger.info('MongoDB connected successfully');
+    await dropStaleIndexes();
     const PORT = process.env.PORT || 5000;
     server.listen(PORT, () => {
       logger.info(`SaathiShaadi backend running on port ${PORT}`);
