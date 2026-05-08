@@ -26,7 +26,11 @@ const Browse = () => {
       const res = await api.get(`/users?${params}`);
       setProfiles(res.data.users || []);
       setTotalPages(res.data.totalPages || 1);
-    } catch { toast.error('Profiles load karne mein error'); }
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Unknown error';
+      console.error('Profiles fetch error:', msg, err);
+      toast.error(`Profiles load nahi hue: ${msg}`);
+    }
     setLoading(false);
   }, [filters, page]);
 

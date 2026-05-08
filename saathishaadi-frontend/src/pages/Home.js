@@ -4,6 +4,7 @@ import { TopAdBanner, SidebarAd, InlineAd } from '../components/AdBanner';
 import { useAuth } from '../context/AuthContext';
 import api from '../utils/api';
 import logo from '../assest/logo.png';
+import heroVideo from '../assest/1.mp4';
 import { DUMMY_PROFILES } from '../utils/dummyData';
 
 const STATS = [
@@ -35,8 +36,20 @@ const Home = () => {
       <TopAdBanner />
 
       {/* Hero Section */}
-      <section style={styles.hero}>
-        <div style={styles.heroOverlay} />
+     <section style={styles.hero}>
+
+  <video
+    autoPlay
+    muted
+    loop
+    playsInline
+    style={styles.heroVideo}
+  >
+    <source src={heroVideo} type="video/mp4" />
+  </video>
+
+  <div style={styles.heroOverlay} />
+  
         <div style={styles.heroContent}>
           <div style={styles.heroBadge}>
             <img src={logo} alt="" style={styles.badgeLogo} />
@@ -209,23 +222,34 @@ const Home = () => {
 
 const styles = {
   hero: {
-    minHeight: 520, position: 'relative',
+    minHeight: 665, position: 'relative',
     background: 'linear-gradient(135deg, #1a0a0a 0%, #2d1010 40%, #4a1515 100%)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     overflow: 'hidden',
   },
+  heroVideo: {
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  zIndex: 1,
+},
   heroOverlay: {
-    position: 'absolute', inset: 0,
-    backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23d4a017\' fill-opacity=\'0.05\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-  },
+  position: 'absolute',
+  inset: 0,
+  background: 'rgba(0,0,0,0.45)',
+  zIndex: 1,
+},
   heroContent: {
     textAlign: 'center', padding: '60px 20px', position: 'relative', zIndex: 1,
   },
   heroBadge: {
-    display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(212,160,23,0.2)',
-    border: '1px solid rgba(212,160,23,0.5)', color: '#d4a017',
+    display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent',
+    border: '1px solid rgba(212,160,23,0.5)', color: '#FFD700',
     padding: '6px 18px', borderRadius: 20, fontSize: 13,
-    fontFamily: "'Hind', sans-serif", marginBottom: 20,
+    fontFamily: "'Hindi', sans-serif", marginBottom: 20,
   },
   badgeLogo: { width: 22, height: 22, objectFit: 'contain' },
   heroTitle: {

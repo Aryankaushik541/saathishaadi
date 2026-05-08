@@ -83,7 +83,7 @@ const globalLimiter = rateLimit({
  */
 const authLimiter = rateLimit({
   windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 5, // max 5 OTP requests per 10 min
+  max: 10, // max 5 OTP requests per 10 min
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: false,
@@ -99,7 +99,7 @@ const authLimiter = rateLimit({
  */
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // max 10 login attempts
+  max: 20, // max 10 login attempts
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Bahut zyada login attempts. 15 minute baad try karein.' },
@@ -125,7 +125,7 @@ const apiLimiter = rateLimit({
  */
 const adminLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 50,
+  max: 60,
   standardHeaders: true,
   legacyHeaders: false,
   message: { message: 'Admin rate limit exceeded.' },

@@ -85,27 +85,63 @@ app.use(globalLimiter);
 app.use(suspiciousRequestLogger);
 
 // ─── CORS ────────────────────────────────────────────────────────────────────
-const allowedOrigins = [
-  process.env.FRONTEND_URL || 'http://localhost:3000',
-  process.env.ADMIN_URL || 'http://localhost:3001',
-  'http://localhost:3000',
-  'http://localhost:3001',
-].filter(Boolean);
+// Sab allowed origins collect karo (env variables + localhost dev)
+const buildAllowedOrigins = () => {
+  const origins = new Set([
+    'http://localhost:3000',
+    'http://localhost:3001',
+  ]);
+
+  // FRONTEND_URL env se add karo (http aur https dono)
+  const addWithVariants = (url) => {
+    if (!url) return;
+    const clean = url.replace(/\/$/, ''); // trailing slash hatao
+    origins.add(clean);
+    // http <-> https dono allow karo
+    if (clean.startsWith('https://')) {
+      origins.add(clean.replace('https://', 'http://'));
+      // www variant bhi add karo
+      if (!clean.includes('://www.')) {
+        origins.add(clean.replace('https://', 'https://www.'));
+        origins.add(clean.replace('https://', 'http://www.'));
+      }
+    } else if (clean.startsWith('http://')) {
+      origins.add(clean.replace('http://', 'https://'));
+      if (!clean.includes('://www.')) {
+        origins.add(clean.replace('http://', 'http://www.'));
+        origins.add(clean.replace('http://', 'https://www.'));
+      }
+    }
+  };
+
+  addWithVariants(process.env.FRONTEND_URL);
+  addWithVariants(process.env.ADMIN_URL);
+
+  // EXTRA_ORIGINS env se comma-separated list (optional)
+  if (process.env.EXTRA_ORIGINS) {
+    process.env.EXTRA_ORIGINS.split(',').forEach(o => addWithVariants(o.trim()));
+  }
+
+  return [...origins];
+};
+
+const allowedOrigins = buildAllowedOrigins();
+logger.info('CORS allowed origins:', allowedOrigins);
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow server-to-server (no origin) and whitelisted origins
+    // Allow server-to-server (no origin) aur whitelisted origins
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       logger.warn(`CORS blocked: ${origin}`);
-      callback(new Error('CORS policy violation'));
+      callback(new Error(`CORS policy violation: ${origin} not allowed`));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  maxAge: 86400, // Preflight cache 24 hours
+  maxAge: 86400,
 }));
 
 // ─── REQUEST PROCESSING ──────────────────────────────────────────────────────
