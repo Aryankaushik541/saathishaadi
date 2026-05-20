@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Header from '../components/Header';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { adminAPI } from '../utils/api';
+import  adminAPI  from '../utils/api';
 import toast from 'react-hot-toast';
 import '../pages/Dashboard.css';
 import './Ads.css';
@@ -12,7 +12,7 @@ const emptyAd = { title: '', description: '', imageUrl: '', link: '#', position:
 
 export default function Ads() {
   const { token } = useAdminAuth();
-  const api = adminAPI(token);
+  const api = adminAPI;
 
   const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);

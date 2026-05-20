@@ -1,60 +1,107 @@
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+// API utility - centralized fetch wrapper
 
-export const api = async (endpoint, options = {}, token = null) => {
+const BASE = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+
+const getToken = () => localStorage.getItem('adminToken');
+
+const req = async (method, path, body = null, opts = {}) => {
   const headers = { 'Content-Type': 'application/json' };
+  const token = getToken();
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res = await fetch(`${BASE_URL}${endpoint}`, { headers, ...options });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'API Error');
+
+  const config = { method, headers, ...opts };
+  if (body && method !== 'GET') config.body = JSON.stringify(body);
+
+  const res = await fetch(`${BASE}${path}`, config);
+  const data = await res.json().catch(() => ({}));
+
+  if (!res.ok) {
+    const err = new Error(data.message || 'API error');
+    err.status = res.status;
+    throw err;
+  }
   return data;
 };
 
-export const adminAPI = (token) => ({
-  // Auth
-  login: (creds) => api('/admin/login', { method: 'POST', body: JSON.stringify(creds) }),
+const api = {
+  // ── Auth ────────────────────────────────────────────────────────────────
+  login: (creds)  => req('POST', '/admin/login', creds),
 
-  // Dashboard
-  dashboard: () => api('/admin/dashboard', {}, token),
+  // ── Dashboard ────────────────────────────────────────────────────────────
+  dashboard: ()   => req('GET', '/admin/dashboard'),
 
-  // Users
-  getUsers: (params = '') => api(`/admin/users${params}`, {}, token),
-  editUser: (id, data) => api(`/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }, token),
-  blockUser: (id) => api(`/admin/users/${id}/block`, { method: 'PUT' }, token),
-  unblockUser: (id) => api(`/admin/users/${id}/unblock`, { method: 'PUT' }, token),
-  deleteUser: (id) => api(`/admin/users/${id}`, { method: 'DELETE' }, token),
+  // ── Users ────────────────────────────────────────────────────────────────
+  getUsers:    (params = {}) => req('GET', `/admin/users?${new URLSearchParams(params)}`),
+  updateUser:  (id, data)    => req('PUT', `/admin/users/${id}`, data),
+  blockUser:   (id)          => req('PUT', `/admin/users/${id}/block`),
+  unblockUser: (id)          => req('PUT', `/admin/users/${id}/unblock`),
+  deleteUser:  (id)          => req('DELETE', `/admin/users/${id}`),
 
-  // Proposals
-  getProposals: (params = '') => api(`/admin/proposals${params}`, {}, token),
-  updateProposalStatus: (id, status) => api(`/admin/proposals/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }, token),
-  deleteProposal: (id) => api(`/admin/proposals/${id}`, { method: 'DELETE' }, token),
+  // ── Proposals ────────────────────────────────────────────────────────────
+  getProposals:       (params = {}) => req('GET', `/admin/proposals?${new URLSearchParams(params)}`),
+  updateProposalStatus: (id, status) => req('PUT', `/admin/proposals/${id}/status`, { status }),
+  deleteProposal:     (id)          => req('DELETE', `/admin/proposals/${id}`),
 
-  // Messages
-  getMessages: (params = '') => api(`/admin/messages${params}`, {}, token),
-  deleteMessage: (id) => api(`/admin/messages/${id}`, { method: 'DELETE' }, token),
+  // ── Messages ─────────────────────────────────────────────────────────────
+  getMessages:   (params = {}) => req('GET', `/admin/messages?${new URLSearchParams(params)}`),
+  deleteMessage: (id)          => req('DELETE', `/admin/messages/${id}`),
 
-  // Ads
-  getAds: () => api('/admin/ads', {}, token),
-  createAd: (data) => api('/admin/ads', { method: 'POST', body: JSON.stringify(data) }, token),
-  updateAd: (id, data) => api(`/admin/ads/${id}`, { method: 'PUT', body: JSON.stringify(data) }, token),
-  deleteAd: (id) => api(`/admin/ads/${id}`, { method: 'DELETE' }, token),
-
-  // NEW: Ad Image Direct Upload (multipart/form-data)
-  uploadAdImage: async (file) => {
-    const formData = new FormData();
-    formData.append('image', file);
-    const res = await fetch(`${BASE_URL}/admin/ads/upload-image`, {
+  // ── Ads ──────────────────────────────────────────────────────────────────
+  getAds:     ()       => req('GET', '/admin/ads'),
+  createAd:   (data)   => req('POST', '/admin/ads', data),
+  updateAd:   (id, d)  => req('PUT', `/admin/ads/${id}`, d),
+  deleteAd:   (id)     => req('DELETE', `/admin/ads/${id}`),
+  uploadAdImage: (formData) => {
+    const token = getToken();
+    return fetch(`${BASE}/admin/ads/upload-image`, {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${token}` },
+      headers: { Authorization: `Bearer ${token}` },
       body: formData,
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Image upload failed');
-    return data;
+    }).then(r => r.json());
   },
 
-  // Pages
-  getPages: () => api('/admin/pages', {}, token),
-  createPage: (data) => api('/admin/pages', { method: 'POST', body: JSON.stringify(data) }, token),
-  updatePage: (id, data) => api(`/admin/pages/${id}`, { method: 'PUT', body: JSON.stringify(data) }, token),
-  deletePage: (id) => api(`/admin/pages/${id}`, { method: 'DELETE' }, token),
-});
+  // ── Pages ────────────────────────────────────────────────────────────────
+  getPages:    ()         => req('GET', '/admin/pages'),
+  createPage:  (data)     => req('POST', '/admin/pages', data),
+  updatePage:  (id, data) => req('PUT', `/admin/pages/${id}`, data),
+  deletePage:  (id)       => req('DELETE', `/admin/pages/${id}`),
+
+  // ── Settings ─────────────────────────────────────────────────────────────
+  getSettings:        (params = {}) => req('GET', `/admin/settings?${new URLSearchParams(params)}`),
+  getSettingsGrouped: ()            => req('GET', '/admin/settings/grouped'),
+  updateSetting:      (key, value)  => req('PUT', `/admin/settings/${encodeURIComponent(key)}`, { value }),
+  bulkUpdateSettings: (settings)   => req('PUT', '/admin/settings', { settings }),
+  resetSettings:      ()           => req('POST', '/admin/settings/reset'),
+
+  // ── IP Management ────────────────────────────────────────────────────────
+  getIPBlacklist:     (params = {}) => req('GET', `/admin/ip-blacklist?${new URLSearchParams(params)}`),
+  addIPBlacklist:     (data)        => req('POST', '/admin/ip-blacklist', data),
+  removeIPBlacklist:  (ip)          => req('DELETE', `/admin/ip-blacklist/${encodeURIComponent(ip)}`),
+  clearAutoBlocked:   ()            => req('POST', '/admin/ip-blacklist/clear-auto'),
+  getSuspiciousIPs:   ()            => req('GET', '/admin/ip-suspicious'),
+
+  // ── Access Logs ──────────────────────────────────────────────────────────
+  getAccessLogs:     (params = {}) => req('GET', `/admin/access-logs?${new URLSearchParams(params)}`),
+  getIPLogs:         (ip, p = {})  => req('GET', `/admin/access-logs/ip/${encodeURIComponent(ip)}?${new URLSearchParams(p)}`),
+  getTopIPs:         (params = {}) => req('GET', `/admin/access-logs/top-ips?${new URLSearchParams(params)}`),
+  getAccessLogStats: (params = {}) => req('GET', `/admin/access-logs/stats?${new URLSearchParams(params)}`),
+  clearAccessLogs:   (data)        => req('DELETE', '/admin/access-logs', data),
+
+  // ── Call Logs ────────────────────────────────────────────────────────────
+  getCallLogs:    (params = {}) => req('GET', `/admin/call-logs?${new URLSearchParams(params)}`),
+  updateCallLog:  (id, data)    => req('PUT', `/admin/call-logs/${id}`, data),
+  deleteCallLog:  (id)          => req('DELETE', `/admin/call-logs/${id}`),
+  clearCallLogs:  (data)        => req('DELETE', '/admin/call-logs', data),
+
+  // ── OTP Logs ─────────────────────────────────────────────────────────────
+  getOTPLogs:    (params = {}) => req('GET', `/admin/otp-logs?${new URLSearchParams(params)}`),
+  cleanupOTPs:   ()            => req('DELETE', '/admin/otp-logs/cleanup'),
+  deleteOTP:     (id)          => req('DELETE', `/admin/otp-logs/${id}`),
+
+  // ── System ───────────────────────────────────────────────────────────────
+  getSystemHealth:     ()              => req('GET', '/admin/system/health'),
+  refreshSettings:     ()              => req('POST', '/admin/system/refresh-settings'),
+  setMaintenanceMode:  (enabled)       => req('POST', '/admin/system/maintenance', { enabled }),
+};
+
+export default api;

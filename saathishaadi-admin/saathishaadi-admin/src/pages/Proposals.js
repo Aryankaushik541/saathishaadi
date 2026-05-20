@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from '../components/Header';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { adminAPI } from '../utils/api';
+import  adminAPI  from '../utils/api';
 import toast from 'react-hot-toast';
 import './Dashboard.css';
 import './Users.css';
@@ -20,7 +20,7 @@ const STATUS_ICONS = {
 
 export default function Proposals() {
   const { token } = useAdminAuth();
-  const api = adminAPI(token);
+  const api = adminAPI;
 
   const [proposals, setProposals] = useState([]);
   const [total, setTotal] = useState(0);

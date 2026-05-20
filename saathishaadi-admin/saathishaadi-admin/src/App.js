@@ -10,7 +10,12 @@ import Proposals from './pages/Proposals';
 import Messages from './pages/Messages';
 import Ads from './pages/Ads';
 import Pages from './pages/Pages';
-
+import SecuritySettings from './pages/SecuritySettings';
+import IPManagement from './pages/IPManagement';
+import AccessLogs from './pages/AccessLogs';
+import OTPLogs from './pages/OTPLogs';
+import CallLogs from './pages/CallLogs';
+import SystemHealth from './pages/SystemHealth';
 const ProtectedRoute = ({ children }) => {
   const { token, loading } = useAdminAuth();
   if (loading) return (
@@ -21,18 +26,31 @@ const ProtectedRoute = ({ children }) => {
   return token ? children : <Navigate to="/login" />;
 };
 
+const Wrap = ({ children }) => (
+  <ProtectedRoute><Layout>{children}</Layout></ProtectedRoute>
+);
+
 const AdminRoutes = () => {
   const { token } = useAdminAuth();
   return (
     <Routes>
-      <Route path="/login" element={token ? <Navigate to="/dashboard" /> : <AdminLogin />} />
-      <Route path="/dashboard" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-      <Route path="/users" element={<ProtectedRoute><Layout><Users /></Layout></ProtectedRoute>} />
-      <Route path="/proposals" element={<ProtectedRoute><Layout><Proposals /></Layout></ProtectedRoute>} />
-      <Route path="/messages" element={<ProtectedRoute><Layout><Messages /></Layout></ProtectedRoute>} />
-      <Route path="/ads" element={<ProtectedRoute><Layout><Ads /></Layout></ProtectedRoute>} />
-      <Route path="/pages" element={<ProtectedRoute><Layout><Pages /></Layout></ProtectedRoute>} />
-      <Route path="*" element={<Navigate to={token ? "/dashboard" : "/login"} />} />
+      <Route path="/login"             element={token ? <Navigate to="/dashboard" /> : <AdminLogin />} />
+      <Route path="/dashboard"         element={<Wrap><Dashboard /></Wrap>} />
+      <Route path="/users"             element={<Wrap><Users /></Wrap>} />
+      <Route path="/proposals"         element={<Wrap><Proposals /></Wrap>} />
+      <Route path="/messages"          element={<Wrap><Messages /></Wrap>} />
+      <Route path="/ads"               element={<Wrap><Ads /></Wrap>} />
+      <Route path="/pages"             element={<Wrap><Pages /></Wrap>} />
+      {/* Security */}
+      <Route path="/security-settings" element={<Wrap><SecuritySettings /></Wrap>} />
+      <Route path="/ip-management"     element={<Wrap><IPManagement /></Wrap>} />
+      <Route path="/access-logs"       element={<Wrap><AccessLogs /></Wrap>} />
+      <Route path="/otp-logs"          element={<Wrap><OTPLogs /></Wrap>} />
+      {/* Calls */}
+      <Route path="/call-logs"         element={<Wrap><CallLogs /></Wrap>} />
+      {/* System */}
+      <Route path="/system-health"     element={<Wrap><SystemHealth /></Wrap>} />
+      <Route path="*"                  element={<Navigate to={token ? '/dashboard' : '/login'} />} />
     </Routes>
   );
 };

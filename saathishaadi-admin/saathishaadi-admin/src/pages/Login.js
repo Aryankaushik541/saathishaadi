@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { adminAPI } from '../utils/api';
+import  adminAPI  from '../utils/api';
 import './Login.css';
 
 export default function AdminLogin() {
@@ -16,7 +16,7 @@ export default function AdminLogin() {
     if (!form.username || !form.password) return toast.error('Sab fields bharo');
     setLoading(true);
     try {
-      const data = await adminAPI(null).login(form);
+      const data = await adminAPI.login(form);
       login(data.token, data.admin);
       toast.success('Admin panel mein swagat hai!');
       navigate('/dashboard');

@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip,
   ResponsiveContainer, Legend
 } from 'recharts';
 import Header from '../components/Header';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { adminAPI } from '../utils/api';
+import adminAPI  from '../utils/api';
 import toast from 'react-hot-toast';
 import './Dashboard.css';
 
@@ -22,13 +23,14 @@ const StatCard = ({ icon, label, value, sub, color }) => (
 
 export default function Dashboard() {
   const { token } = useAdminAuth();
+  const navigate = useNavigate();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetch = async () => {
       try {
-        const d = await adminAPI(token).dashboard();
+        const d = await adminAPI.dashboard();
         setData(d);
       } catch (err) {
         toast.error('Dashboard data load nahi hua');
@@ -193,6 +195,15 @@ export default function Dashboard() {
               <span className="summary-val" style={{ color: '#8e44ad' }}>
                 {data ? (data.totalMessages / (data.totalUsers || 1)).toFixed(1) : '...'}
               </span>
+            </div>
+            <div className="summary-item summary-action">
+              <span className="summary-label">Admin Messages</span>
+              <button
+                className="dashboard-action-btn"
+                onClick={() => navigate('/messages')}
+              >
+                💬 Messages Padhein
+              </button>
             </div>
             <div className="summary-item">
               <span className="summary-label">Pending Proposals</span>

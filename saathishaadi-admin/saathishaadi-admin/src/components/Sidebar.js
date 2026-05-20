@@ -5,12 +5,26 @@ import toast from 'react-hot-toast';
 import './Sidebar.css';
 
 const navItems = [
-  { to: '/dashboard', icon: '📊', label: 'Dashboard' },
-  { to: '/users', icon: '👥', label: 'Users' },
-  { to: '/proposals', icon: '💌', label: 'Proposals' },
-  { to: '/messages', icon: '💬', label: 'Messages' },
-  { to: '/ads', icon: '📢', label: 'Advertisements' },
-  { to: '/pages', icon: '📄', label: 'Pages' },
+  { section: 'MAIN', items: [
+    { to: '/dashboard',   icon: '📊', label: 'Dashboard' },
+    { to: '/users',       icon: '👥', label: 'Users' },
+    { to: '/proposals',   icon: '💌', label: 'Proposals' },
+    { to: '/messages',    icon: '💬', label: 'Messages' },
+    { to: '/ads',         icon: '📢', label: 'Advertisements' },
+    { to: '/pages',       icon: '📄', label: 'Pages' },
+  ]},
+  { section: 'SECURITY', items: [
+    { to: '/security-settings', icon: '🔐', label: 'Security Settings' },
+    { to: '/ip-management',     icon: '🌐', label: 'IP Management' },
+    { to: '/access-logs',       icon: '📋', label: 'Access Logs' },
+    { to: '/otp-logs',          icon: '🔢', label: 'OTP Logs' },
+  ]},
+  { section: 'CALLS', items: [
+    { to: '/call-logs',   icon: '📞', label: 'Call Logs' },
+  ]},
+  { section: 'SYSTEM', items: [
+    { to: '/system-health', icon: '🖥️', label: 'System Health' },
+  ]},
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
@@ -31,7 +45,7 @@ export default function Sidebar({ isOpen, onClose }) {
           <span className="sidebar-logo-icon">💍</span>
           <div>
             <div className="sidebar-brand">SaathiShaadi</div>
-            <div className="sidebar-sub">Admin Panel</div>
+            <div className="sidebar-sub">Admin Panel v3.0</div>
           </div>
         </div>
 
@@ -44,16 +58,21 @@ export default function Sidebar({ isOpen, onClose }) {
         </div>
 
         <nav className="sidebar-nav">
-          {navItems.map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
-              onClick={onClose}
-            >
-              <span className="sidebar-icon">{item.icon}</span>
-              <span>{item.label}</span>
-            </NavLink>
+          {navItems.map(({ section, items }) => (
+            <div key={section} className="sidebar-section">
+              <div className="sidebar-section-label">{section}</div>
+              {items.map(item => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}
+                  onClick={onClose}
+                >
+                  <span className="sidebar-icon">{item.icon}</span>
+                  <span>{item.label}</span>
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
 

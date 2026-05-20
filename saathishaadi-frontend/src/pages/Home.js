@@ -222,7 +222,7 @@ const Home = () => {
 
 const styles = {
   hero: {
-    minHeight: 665, position: 'relative',
+    minHeight: 680, position: 'relative',
     background: 'linear-gradient(135deg, #1a0a0a 0%, #2d1010 40%, #4a1515 100%)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     overflow: 'hidden',

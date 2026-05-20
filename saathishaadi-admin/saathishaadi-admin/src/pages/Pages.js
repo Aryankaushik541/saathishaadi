@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import { useAdminAuth } from '../context/AdminAuthContext';
-import { adminAPI } from '../utils/api';
+import  adminAPI  from '../utils/api';
 import toast from 'react-hot-toast';
 import './Dashboard.css';
 
@@ -15,7 +15,7 @@ const defaultForm = {
 
 export default function Pages() {
   const { token } = useAdminAuth();
-  const api = adminAPI(token);
+  const api = adminAPI;
   const [pages, setPages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null);
